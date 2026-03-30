@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>❤️ 終極男友生存挑戰 ❤️</title>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; touch-action: manipulation; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: -apple-system, sans-serif; background: #222; }
+        #game-container { width: 100%; height: 100%; background: url('https://images.unsplash.com/photo-1516553174826-d05833723cd4?q=80&w=1000') center/cover; position: relative; }
+        #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; text-align: center; padding: 30px; }
+        #notification { position: absolute; top: -200px; left: 12px; right: 12px; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(15px); border-radius: 20px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1); z-index: 500; }
+        #notification.show { transform: translateY(220px); }
+        .notif-header { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; color: #666; }
+        .notif-icon { width: 20px; height: 20px; border-radius: 5px; margin-right: 10px; }
+        .icon-target { background: linear-gradient(45deg, #f09433, #e31682); }
+        .icon-other { background: #8e8e93; }
+        .notif-sender { font-weight: bold; color: #333; margin-bottom: 2px; font-size: 14px; }
+        .notif-body { font-size: 15px; color: #000; margin-bottom: 15px; font-weight: 500; }
+        .notif-actions { border-top: 0.5px solid #ddd; display: flex; margin: 0 -15px -15px -15px; }
+        .action-btn { flex: 1; padding: 15px; text-align: center; font-size: 16px; color: #007aff; font-weight: 600; cursor: pointer; }
+        .action-btn.like { color: #ff2d55; border-right: 0.5px solid #ddd; }
+        .heart { position: absolute; font-size: 45px; pointer-events: none; z-index: 2000; animation: floatUp 0.8s ease-out forwards; }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-200px) scale(2); opacity: 0; } }
+        #score-display { position: absolute; top: 50px; width: 100%; text-align: center; color: white; font-size: 36px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); z-index: 100; }
+        button#start-btn { background: #ff4757; color: white; border: none; padding: 18px 50px; border-radius: 40px; font-size: 20px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div id="game-container">
+    <div id="score-display">0</div>
+    <div id="overlay">
+        <h1 id="overlay-title">🚨 生存訓練 🚨</h1>
+        <p id="overlay-desc">只准點擊「<b>親愛的女友</b>」的讚！<br>漏掉或點錯人都會結束。</p>
+        <button id="start-btn">開始接受挑戰</button>
+    </div>
+    <div id="notification">
+        <div class="notif-header">
+            <div id="target-icon" class="notif-icon"></div>
+            <span style="flex-grow:1">Instagram</span>
+            <span>現在</span>
+        </div>
+        <div class="notif-sender" id="sender-name">載入中...</div>
+        <div class="notif-body" id="msg-content">...</div>
+        <div class="notif-actions">
+            <div class="action-btn like" id="like-btn">讚</div>
+            <div class="action-btn" id="reply-btn">回覆</div>
+        </div>
+    </div>
+</div>
+<script>
+    const notification = document.getElementById('notification');
+    const senderName = document.getElementById('sender-name');
+    const msgContent = document.getElementById('msg-content');
+    const targetIcon = document.getElementById('target-icon');
+    const scoreDisplay = document.getElementById('score-display');
+    const overlay = document.getElementById('overlay');
+    const startBtn = document.getElementById('start-btn');
+    let score = 0, gameActive = false, timer = null, currentSpeed = 1500, isTarget = true;
+    const girlfriendMsgs = ["想我嗎？❤️", "這張照片好看嗎？", "肚子餓了啦...", "愛你喔！", "在幹嘛？", "快理我！"];
+    const otherMsgs = [
+        { name: "老闆", msg: "報表交了沒？" },
+        { name: "外送員", msg: "餐點已送達門口" },
+        { name: "詐騙", msg: "您的包裹地址錯誤" },
+        { name: "廣告", msg: "限時特價 1 折起！" },
+        { name: "貓咪", msg: "喵～(要摸摸)" }
+    ];
+    startBtn.addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
+    function startGame() { score = 0; currentSpeed = 1500; gameActive = true; scoreDisplay.innerText = score; overlay.style.display = 'none'; spawnNotification(); }
+    function spawnNotification() {
+        if (!gameActive) return;
+        isTarget = Math.random() > 0.35; 
+        if (isTarget) {
+            senderName.innerText = "親愛的女友";
+            msgContent.innerText = girlfriendMsgs[Math.floor(Math.random() * girlfriendMsgs.length)];
+            targetIcon.className = "notif-icon icon-target";
+        } else {
+            const other = otherMsgs[Math.floor(Math.random() * otherMsgs.length)];
+            senderName.innerText = other.name;
+            msgContent.innerText = other.msg;
+            targetIcon.className = "notif-icon icon-other";
+        }
+        notification.classList.add('show');
+        timer = setTimeout(() => { if (isTarget) gameOver("太慢了！漏掉女友訊息！"); else nextTurn(); }, currentSpeed);
+    }
+    function handleAction(type, event) {
+        if (!gameActive || !notification.classList.contains('show')) return;
+        event.preventDefault();
+        const x = event.changedTouches ? event.changedTouches[0].clientX : event.clientX;
+        const y = event.changedTouches ? event.changedTouches[0].clientY : event.clientY;
+        if (isTarget) {
+            if (type === 'like') { clearTimeout(timer); score++; scoreDisplay.innerText = score; createHeart(x, y); if (currentSpeed > 450) currentSpeed -= 70; nextTurn(); }
+            else { gameOver("不准點回覆，只能點讚！"); }
+        } else { gameOver(`你竟然點了「${senderName.innerText}」的讚？！`); }
+    }
+    const lBtn = document.getElementById('like-btn'), rBtn = document.getElementById('reply-btn');
+    lBtn.addEventListener('touchstart', (e) => handleAction('like', e));
+    lBtn.addEventListener('click', (e) => handleAction('like', e));
+    rBtn.addEventListener('touchstart', (e) => handleAction('reply', e));
+    rBtn.addEventListener('click', (e) => handleAction('reply', e));
+    function nextTurn() { notification.classList.remove('show'); setTimeout(spawnNotification, 500); }
+    function gameOver(reason) { gameActive = false; notification.classList.remove('show'); overlay.style.display = 'flex'; document.getElementById('overlay-title').innerText = "💀 訓練失敗"; document.getElementById('overlay-desc').innerHTML = `${reason}<br><br>得分：${score}`; }
+    function createHeart(x, y) { const heart = document.createElement('div'); heart.innerHTML = '❤️'; heart.className = 'heart'; heart.style.left = (x - 22) + 'px'; heart.style.top = (y - 22) + 'px'; document.body.appendChild(heart); setTimeout(() => heart.remove(), 800); }
+</script>
+</body>
+</html>
